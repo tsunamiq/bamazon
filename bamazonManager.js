@@ -42,7 +42,7 @@ function init(){
       message: "Please Choose an option",
       choices: ["View Products for Sale", "View Low Inventory","Add to Inventory","Add New Product","Quit"],
       name: "choice"
-    },
+    }
     // Here we ask the user to confirm.
   ])
   .then(function(inquirerResponse) {
@@ -60,8 +60,8 @@ function init(){
       case "Add to Inventory":
           addToInentory()
         break;
-      case "Add to Inventory":
-
+      case "Add New Product":
+        addProduct();
         break;
       case "Quit":
         console.log("GOOD BYE");
@@ -210,34 +210,34 @@ function addProduct(){
       var department = inquirerResponse.department;
       var cost = inquirerResponse.cost;
 
-      if(inquirerResponse.id === "" || inquirerResponse.qty === ""){
-        console.log("Please enter a valid ID and Qty.");
-        init();
-      }else{
-      
-        connection.query("SELECT * FROM products WHERE ?", {id: idChoice},function(err,res) {
-            if(res.length === 0){
-              console.log("Please choose a valid ID!");
-              init();
-            }else{
-              var productName = res[0].product_name;
-              var newQty = res[0].stock_quantity +qty;
-            
-
-             
-              connection.query("UPDATE products SET stock_quantity=? WHERE ?",[newQty, {id: idChoice}], function(err,res){
+      console.log("Product Name: " + productName + " || Department: " + department + " || Quantity: " + qty + " || Cost: " + cost);
+      inquirer.prompt([
+      // Here we create a basic text prompt.
+        {
+          type: "list",
+          message: "Is the Above correct?",
+          choices: ["Yes","No"],
+          name: "choice"
+        }
+      ])
+      .then(function(inquirerResponse) {
+          switch(inquirerResponse.choice){
+            case "Yes":
+              connection.query("INSERT INTO products (product_name,department_name,customer_price,stock_quantity) VALUES (?,?,?,?)", [productName,department,cost, qty],function(err,res) {      
                 
-              console.log("You added: " + qty + " of " + productName + ".");
-              console.log("Your total qty is: " + newQty);
-              init();
+                console.log("Product Added!")
+                init();                 
+                  
               })
-            }
-          })
-       }
- 
+              break;
+            case "No":
+              console.log("Please select add product and enter the correct information.")
+                init();
+              break;
+          }
+      });
     });
-
-}
+  }
 
 
 init();
