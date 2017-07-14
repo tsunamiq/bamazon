@@ -28,6 +28,11 @@
 
   });
 
+
+//========================================================================
+//      Initilize app
+//========================================================================
+
 function init(){
   inquirer
   .prompt([
@@ -73,33 +78,34 @@ function prompt(){
     .then(function(inquirerResponse) {
       var idChoice = parseInt(inquirerResponse.id);
       var qty = parseInt(inquirerResponse.qty);
-
+      if(inquirerResponse.id === "" || inquirerResponse.qty === ""){
+        console.log("Please enter a valid ID and Qty.");
+        init();
+      }else{
       
-      connection.query("SELECT * FROM products WHERE ?", {id: idChoice},function(err,res) {
-          var productName = res[0].product_name;
-          if(res.length === 0){
-            console.log("Please choose a valid ID!");
-            init();
-          }else if(qty > res[0].stock_quantity){
-            console.log("Insufficient Quantity! Try Again!");
-            init();
-          }else{
-            var newQty = res[0].stock_quantity -qty;
-            var totalCost = qty*res[0].customer_price;
+        connection.query("SELECT * FROM products WHERE ?", {id: idChoice},function(err,res) {
+            if(res.length === 0){
+              console.log("Please choose a valid ID!");
+              init();
+            }else if(qty > res[0].stock_quantity){
+              console.log("Insufficient Quantity! Try Again!");
+              init();
+            }else{
+              var productName = res[0].product_name;
+              var newQty = res[0].stock_quantity -qty;
+              var totalCost = qty*res[0].customer_price;
 
-            console.log(newQty)
-            connection.query("UPDATE products SET stock_quantity=? WHERE ?",[newQty, {id: idChoice}], function(err,res){
-              
-            console.log("You ordered: " + qty + " of " + productName + ".");
-            console.log("Your total cost is: " + totalCost);
-            init();
-            })
-          }
-         
-        })
-
-
-    
+              console.log(newQty)
+              connection.query("UPDATE products SET stock_quantity=? WHERE ?",[newQty, {id: idChoice}], function(err,res){
+                
+              console.log("You ordered: " + qty + " of " + productName + ".");
+              console.log("Your total cost is: " + totalCost);
+              init();
+              })
+            }
+          })
+       }
+ 
     });
 
 }
@@ -111,7 +117,6 @@ function prompt(){
 
   function showAllItems() {
 
-    var finalTable = [];
     var tempTable = [];
     var table = new Table({
       head:["ID","Product","Department", "Price","Qty"], colWidths:[5,15,15,10,10]
@@ -120,40 +125,20 @@ function prompt(){
     console.log("Showing  all products...\n");
     connection.query("SELECT * FROM products", function(err, res) {
       if (err) throw err;
-      // Log all results of the SELECT statement
-      // console.log(res);
 
-      // console.log("==========================================================")
-      // console.log("ID   |  Product Name   |  Department  |  Price  | Quantity")
-      // console.log("----------------------------------------------------------")
       for(var i = 0 ; i < res.length ; i++){
-        
-      // console.log( res[i].id + "   " + res[i].product_name + "   " + res[i].department_name + "  "  + res[i].customer_price  + " "  + res[i].stock_quantity);
-      // }
-      tempTable = [ res[i].id ,res[i].product_name , res[i].department_name ,res[i].customer_price ,res[i].stock_quantity];
-      table.push(tempTable);
+        tempTable = [ res[i].id ,res[i].product_name , res[i].department_name ,res[i].customer_price ,res[i].stock_quantity];
+        table.push(tempTable);
       }
 
-     
-  
+    
       console.log(table.toString());
       prompt();
     });
   }
 
 
-
-//========================================================================
-//      calculate cart
-//========================================================================
-
-function calculate(){
-
-}
-
-
 init();
-
 
 })();
 
