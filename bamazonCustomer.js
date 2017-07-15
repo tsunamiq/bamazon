@@ -94,12 +94,13 @@ function prompt(){
               var productName = res[0].product_name;
               var newQty = res[0].stock_quantity -qty;
               var totalCost = qty*res[0].customer_price;
+              var newProductSales = totalCost + res[0].product_sales;
 
               console.log(newQty)
-              connection.query("UPDATE products SET stock_quantity=? WHERE ?",[newQty, {id: idChoice}], function(err,res){
+              connection.query("UPDATE products SET stock_quantity=?,product_sales=? WHERE ?",[newQty,newProductSales, {id: idChoice}], function(err,res){
                 
               console.log("You ordered: " + qty + " of " + productName + ".");
-              console.log("Your total cost is: " + totalCost);
+              console.log("Your total cost is: " + totalCost.toFixed(2));
               init();
               })
             }
