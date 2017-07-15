@@ -49,6 +49,10 @@ FEATURES and FUNCTIONALITY:
 		-View Product Sales by Department
 		-Create New Department
 
+DEMO:
+
+	Demo was capture through youtube. Link: https://www.youtube.com/watch?v=YjNbSIQTJrM
+
 
 
 
