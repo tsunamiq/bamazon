@@ -53,6 +53,7 @@ function init(){
           
         break;
       case "Create New Department":
+        createDepartment()
   
         break;
       case "Quit":
@@ -74,7 +75,7 @@ function init(){
 
     var tempTable = [];
     var table = new Table({
-      head:["Department ID","Department Name","Over Head Cost", "Product Sales","Total Profit"], colWidths:[5,15,15,10,10]
+      head:["Department ID","Department Name","Over Head Cost", "Product Sales","Total Profit"], colWidths:[15,17,17,15,15]
     });
 
     console.log("Showing  all product sales...\n");
@@ -83,40 +84,12 @@ function init(){
 // FROM Orders
 // INNER JOIN Customers ON Orders.CustomerID=Customers.CustomerID;
 
-    connection.query("SELECT departments.department_id, departments.department_name,departments.over_head_costs,SUM(products.product_sales)-departments.over_head_costs AS Total_Profit FROM products JOIN departments ON products.department_name= departments.department_name GROUP BY departments.department_id" , function(err, res) {
+    connection.query("SELECT departments.department_id, departments.department_name,departments.over_head_costs,IFNULL(SUM(products.product_sales),0) AS total_product_sales,IFNULL(SUM(products.product_sales-departments.over_head_costs),0) AS total_profit FROM products RIGHT JOIN departments ON products.department_name= departments.department_name GROUP BY departments.department_id" , function(err, res) {
       if (err) throw err;
 
       console.log(res);
-      // for(var i = 0 ; i < res.length ; i++){
-      //   tempTable = [ res[i].id ,res[i].product_name , res[i].department_name ,res[i].customer_price ,res[i].stock_quantity];
-      //   table.push(tempTable);
-      // }
-
-    
-      // console.log(table.toString());
-      init();
-    });
-
-  }
-
-
-//========================================================================
-//      Low Inventory
-//========================================================================
-
-  function showLowInventory() {
-    
-    var tempTable = [];
-    var table = new Table({
-      head:["ID","Product","Department", "Price","Qty"], colWidths:[5,15,15,10,10]
-    });
-
-    console.log("Showing  all products...\n");
-    connection.query("SELECT * FROM products WHERE stock_quantity < 5", function(err, res) {
-      if (err) throw err;
-
       for(var i = 0 ; i < res.length ; i++){
-        tempTable = [ res[i].id ,res[i].product_name , res[i].department_name ,res[i].customer_price ,res[i].stock_quantity];
+        tempTable = [ res[i].department_id ,res[i].department_name , res[i].over_head_costs ,res[i].total_product_sales,res[i].total_profit];
         table.push(tempTable);
       }
 
@@ -124,43 +97,34 @@ function init(){
       console.log(table.toString());
       init();
     });
+
   }
+
+//,SUM(products.product_sales)-departments.over_head_costs AS total_profit FROM products 
 
 //========================================================================
 //      Add Product
 //========================================================================
-function addProduct(){
+function createDepartment(){
   inquirer.prompt([
       // Here we create a basic text prompt.
       {
         type: "input",
-        message: "Please type in new product name.",
-        name: "product_name"
+        message: "Please type in a new department name.",
+        name: "department_name"
       },
       // Here we create a basic password-protected text prompt.
        {
         type: "input",
-        message: "how much would you like to add?",
-        name: "qty"
-      },
-      {
-        type: "input",
-        message: "what department does this product belong to?",
-        name: "department"
-      },
-      {
-        type: "input",
-        message: "what is the cost of the item?",
-        name: "cost"
+        message: "Please enter the over head costs",
+        name: "over_head_costs"
       }
     ])
     .then(function(inquirerResponse) {
-      var qty = parseInt(inquirerResponse.qty);
-      var productName = inquirerResponse.product_name;
-      var department = inquirerResponse.department;
-      var cost = inquirerResponse.cost;
+      var overHeadCosts = parseInt(inquirerResponse.over_head_costs);
+      var departmentName = inquirerResponse.department_name;
 
-      console.log("Product Name: " + productName + " || Department: " + department + " || Quantity: " + qty + " || Cost: " + cost);
+      console.log("Department Name: " + departmentName + " || Over Head Costs: " + overHeadCosts);
       inquirer.prompt([
       // Here we create a basic text prompt.
         {
@@ -173,15 +137,15 @@ function addProduct(){
       .then(function(inquirerResponse) {
           switch(inquirerResponse.choice){
             case "Yes":
-              connection.query("INSERT INTO products (product_name,department_name,customer_price,stock_quantity) VALUES (?,?,?,?)", [productName,department,cost, qty],function(err,res) {      
+              connection.query("INSERT INTO departments (department_name,over_head_costs) VALUES (?,?)", [departmentName,overHeadCosts],function(err,res) {      
                 
-                console.log("Product Added!")
+                console.log("Department Added!")
                 init();                 
                   
               })
               break;
             case "No":
-              console.log("Please select add product and enter the correct information.")
+              console.log("Please select create department and enter the correct information.")
                 init();
               break;
           }
